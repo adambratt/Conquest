@@ -10,6 +10,8 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import com.blockempires.conquest.Conquest;
+import com.blockempires.conquest.ConquestPlugin;
 import com.blockempires.conquest.listeners.AreaHandler;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
@@ -26,6 +28,8 @@ public class Area {
 	private int captureTime;		// Counter until capture
 	private int maxTime = 90;		// Default time to capture
 	private int captureMomentum;	// 0 if not being captured, -1 if being recaptured by owner, 1 if being captured by another race
+	private int maxHourly = 0;		// 0 for infinite number, otherwise a number for max number of captures per hour
+	private int advantage = 2;		// The necessary advantage by the leading race
 	
 	private Race advantageRace;		// The race that currently has the advantage
 	private Race ownerRace; 		// The race that currently controls the position
@@ -46,9 +50,10 @@ public class Area {
 		resetCapture();
 	}
 	
-	public Area(ProtectedRegion region, World world, Race owner){
+	public Area(ProtectedRegion region, World world, Race owner, String label){
 		this(region, world);
 		this.ownerRace = owner;
+		this.name = label;
 	}
 	
 	private void loadRaces(){
@@ -68,6 +73,11 @@ public class Area {
 		if (captureMomentum == 0 && captureTime == 0)
 			return false;
 		return true;
+	}
+	
+	public void save(){
+		Conquest.getDB().query("insert into conquest_areas(name,region,world,`time`,`timemodifier`,`maxhourly`,`owner`,`advantage`) values('"+name+"','"+region+"','"+world+"','"+maxTime+"','"+captureSpeed+"','"+maxHourly+"','"+ownerRace.getName()+"','"+advantage+"')");
+		ConquestPlugin.info("Area for '"+name+"' was saved!");
 	}
 	
 	public void runCapture(){
@@ -107,7 +117,7 @@ public class Area {
 		}
 	}
 	
-	public Race getAdvantage(){
+	public Race raceAdvantage(){
 		int maxCount = 0;
 		int secondCount = 0;
 		Race maxRace = null;
@@ -123,14 +133,14 @@ public class Area {
 				secondCount = entry.getValue();
 			}
 		}
-		// If less than +2 advantage, remove advantage
-		if (maxCount < secondCount+2)
+		// If less than "advantage" advantage, remove advantage
+		if (maxCount < secondCount+advantage)
 			maxRace = null;
 		return maxRace;
 	}
 	
 	public void updateAdvantage(){
-		Race newAdvantage = getAdvantage();
+		Race newAdvantage = raceAdvantage();
 		if (newAdvantage != advantageRace){
 			// Advantage has changed, take action
 			
@@ -174,21 +184,6 @@ public class Area {
 	public void ownerChange(Race owner){
 		ownerRace = owner;
 		// Update config/SQL
-	}
-	
-	public void sendStatus(String status){
-		
-	}
-	
-	public void sendStatusGlobal(String status){
-		Bukkit.getServer().broadcastMessage("[Conquest] "+status);
-	}
-	
-	public void statusUpdate(){
-		String message = "------ Conquest of "+name+" ------ \n";
-		for (Player p : areaPlayers ){
-			p.sendMessage(message);
-		}
 	}
 	
 	public String getName(){
@@ -252,6 +247,21 @@ public class Area {
 			areaPlayers.remove(player);
 			raceCount.put(playerRace, raceCount.get(playerRace)-1);
 			updateAdvantage();
+		}
+	}
+	
+	public void sendStatus(String status){
+		
+	}
+	
+	public void sendStatusGlobal(String status){
+		Bukkit.getServer().broadcastMessage("[Conquest] "+status);
+	}
+	
+	public void statusUpdate(){
+		String message = "------ Conquest of "+name+" ------ \n";
+		for (Player p : areaPlayers ){
+			p.sendMessage(message);
 		}
 	}
 	
