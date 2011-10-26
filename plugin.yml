@@ -1,0 +1,14 @@
+name: Conquest
+main: com.blockempires.conquest.ConquestPlugin
+version: 0.1
+depend: [WorldGuard]
+commands:
+    conquest:
+        description: Conquest commands
+        usage: The commands are not for you to know
+
+permissions:
+    conquest.edit:
+        description: Allows you to edit conquest setups
+        default: false
+    
