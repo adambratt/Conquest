@@ -2,31 +2,62 @@ package com.blockempires.conquest.objects;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
+
+import com.blockempires.conquest.listeners.AreaHandler;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Area {
 	
 	private String name;
+	private World world;
+	private ProtectedRegion region;
+	private AreaHandler aHandler;
 	private HashSet<Player> areaPlayers;
 	private HashMap<Race, Integer> raceCount;
-	private int currentHP;
-	private int maxHP;
+	
 	private int captureSpeed = 1;	// Default for now
 	private int captureTime;		// Counter until capture
 	private int maxTime = 90;		// Default time to capture
 	private int captureMomentum;	// 0 if not being captured, -1 if being recaptured by owner, 1 if being captured by another race
+	
 	private Race advantageRace;		// The race that currently has the advantage
 	private Race ownerRace; 		// The race that currently controls the position
 	private Race capturingRace;		// The race whose ticks are on the clock (only matters for neutral -> capture, not owner -> neutral)
 	
-	public Area(){
+	public Area(ProtectedRegion region, World world){
+		this.name = region.getId();
+		this.region = region;
+		this.world = world;
+		aHandler = new AreaHandler(this);
+		areaPlayers = new HashSet<Player>();
+		raceCount = new HashMap<Race, Integer>();
+		advantageRace = null;
+		ownerRace = null;
+		capturingRace = null;
+		
+		loadRaces();
 		resetCapture();
 	}
 	
+	public Area(ProtectedRegion region, World world, Race owner){
+		this(region, world);
+		this.ownerRace = owner;
+	}
+	
+	private void loadRaces(){
+		Set<Race> racelist = Race.getRaceList();
+		for (Race r : racelist){
+			raceCount.put(r, 0);
+		}
+	}
+
 	public void resetCapture(){
 		captureTime = 0;
 		captureMomentum = 0;
@@ -41,7 +72,7 @@ public class Area {
 	
 	public void runCapture(){
 		// Lets just double check the advantage quick
-		updateAdvantage();
+		/// updateAdvantage();
 		
 		if (captureMomentum == 0){
 			// Nothing happening, reset the clock and get out of here
@@ -113,6 +144,7 @@ public class Area {
 					resetCapture();
 					captureMomentum = 1;
 					capturingRace = newAdvantage;
+					statusCapturing();
 				} else {
 					// Capturing race has gained the edge again
 					captureMomentum = 1;
@@ -131,8 +163,8 @@ public class Area {
 				} else {
 					// Someone is capturing it
 					captureMomentum = 1;
+					statusNeutralizing();
 				}
-				
 			}
 			// And assign the new advantage!
 			advantageRace = newAdvantage;
@@ -149,24 +181,78 @@ public class Area {
 	}
 	
 	public void sendStatusGlobal(String status){
-		
+		Bukkit.getServer().broadcastMessage("[Conquest] "+status);
 	}
 	
 	public void statusUpdate(){
-		
+		String message = "------ Conquest of "+name+" ------ \n";
+		for (Player p : areaPlayers ){
+			p.sendMessage(message);
+		}
+	}
+	
+	public String getName(){
+		return name;
+	}
+	
+	public void setName(String string){
+		this.name = string;
 	}
 	
 	public HashSet<Player> getPlayers(){
 		return areaPlayers;
 	}
 	
+	public HashSet<Player> getRacePlayers(Race race){
+		HashSet<Player> racePlayers = new HashSet<Player>();
+		for (Player p : racePlayers){
+			if (Race.getRace(p) == race){
+				racePlayers.add(p);
+			}
+		}
+		return racePlayers;
+	}
+	
+	public ProtectedRegion getRegion(){
+		return region;
+	}
+	
+	public World getWorld(){
+		return world;
+	}
+	
+	public AreaHandler getHandler(){
+		return aHandler;
+	}
+	
+	public boolean inRegion(Location loc) {
+		com.sk89q.worldedit.Vector v = new com.sk89q.worldedit.Vector(loc.getX(), loc.getY(), loc.getZ());
+		if (region.contains(v)) {
+		     return true;
+		}
+		return false;
+	}
+	
+	public boolean inArea(Player p){
+		return areaPlayers.contains(p);
+	}
+	
 	public void playerEnter(Player player){
-		areaPlayers.add(player);
-		
+		Race playerRace = Race.getRace(player);
+		if (playerRace != null){
+			areaPlayers.add(player);
+			raceCount.put(playerRace, raceCount.get(playerRace)+1);
+			updateAdvantage();
+		}
 	}
 	
 	public void playerExit(Player player){
-		areaPlayers.remove(player);
+		Race playerRace = Race.getRace(player);
+		if (playerRace != null){
+			areaPlayers.remove(player);
+			raceCount.put(playerRace, raceCount.get(playerRace)-1);
+			updateAdvantage();
+		}
 	}
 	
 	public void statusNeutralizing(){
