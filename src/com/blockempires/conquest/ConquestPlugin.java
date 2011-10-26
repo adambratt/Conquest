@@ -19,9 +19,9 @@ public class ConquestPlugin extends JavaPlugin{
 	}
 	
 	//Console loggers
-	public static void info(String msg)    { Bukkit.getServer().getLogger().info("[Mobster] " + msg); }
-    public static void warning(String msg) { Bukkit.getServer().getLogger().warning("[Mobster] " + msg); }    
-    public static void error(String msg)   { Bukkit.getServer().getLogger().severe("[Mobster] " + msg); }
+	public static void info(String msg)    { Bukkit.getServer().getLogger().info("[Conquest] " + msg); }
+    public static void warning(String msg) { Bukkit.getServer().getLogger().warning("[Conquest] " + msg); }    
+    public static void error(String msg)   { Bukkit.getServer().getLogger().severe("[Conquest] " + msg); }
 	
 	public static WorldGuardPlugin getWorldGuard(){
 		return ConquestPlugin.wgPlugin;
