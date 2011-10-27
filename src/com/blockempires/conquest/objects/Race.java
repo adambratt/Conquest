@@ -36,7 +36,7 @@ public class Race {
 	}
 	
 	public static Set<Race> getRaceList() {
-		if(racelist != null || racelist.isEmpty()){
+		if(racelist == null || racelist.isEmpty()){
 			racelist = new HashSet<Race>();
 			//This is very bad and manual for now
 			Race dwarf = new Race("Dwarf");

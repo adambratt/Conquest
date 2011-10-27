@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.configuration.Configuration;
+import org.bukkit.util.config.Configuration;
 
 import com.blockempires.conquest.objects.Area;
 import com.blockempires.conquest.objects.Race;
@@ -28,6 +28,7 @@ public class Conquest implements Runnable {
 	}
 	
 	public void init(){
+		areaList = new HashSet<Area>();
 		loadConfig();
 		loadDatabase();
 		loadAreas();
@@ -60,8 +61,8 @@ public class Conquest implements Runnable {
 
 	public void createArea(ProtectedRegion region, World world) {
 		Area area = new Area(region, world);
-		areaList.add(area);
 		area.save();
+		areaList.add(area);
 	}
 
 	public Area getArea(String string) {
@@ -75,13 +76,14 @@ public class Conquest implements Runnable {
 	
 	
 	private void loadConfig(){
-		config = plugin.getConfig();
+		config = plugin.getConfiguration();
 		String hostname = config.getString("database.host","localhost");
 		String database = config.getString("database.database", "minecraft");
 		String username = config.getString("database.username", "root");
 		String port = config.getString("database.port", "3306");
 		String password = config.getString("database.password", "password");
 		this.db = new MySQL(plugin.getServer().getLogger(), "[Conquest] ", hostname, port, database, username, password);
+		config.save();
 	}
 	
 	private void loadDatabase(){

@@ -1,5 +1,7 @@
 package com.blockempires.conquest;
 
+import java.io.File;
+
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
@@ -16,10 +18,10 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
 public class ConquestPlugin extends JavaPlugin{
 	private static WorldGuardPlugin wgPlugin;
+	private File dir;
 	private Conquest conquest;
 	private PluginManager pManage;
 
-	@Override
 	public void onDisable() {
 		if (conquest != null){
 			conquest.shutdown();
@@ -27,8 +29,11 @@ public class ConquestPlugin extends JavaPlugin{
 		info("Conquest disabled");
 	}
 
-	@Override
 	public void onEnable() {
+		//Get Folder setup
+		dir=getDataFolder();
+		if(!dir.exists()) dir.mkdir();
+				
 		// Setup plugin dependencies
 		pManage=getServer().getPluginManager();
 		loadDependencies();

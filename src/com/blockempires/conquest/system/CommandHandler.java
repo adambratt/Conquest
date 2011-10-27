@@ -27,6 +27,9 @@ public class CommandHandler implements CommandExecutor {
 			player = (Player) sender;
 		}
 		
+		if(args.length < 1)
+			return usageMsg(player);
+		
 		if (args[0].equalsIgnoreCase("create")){
 			// Used to create the regions
 			if (args.length != 2 || player == null)
@@ -42,7 +45,8 @@ public class CommandHandler implements CommandExecutor {
 				return true;
 			}
 			conquest.createArea(region, player.getWorld());
-			msgSuccess(player, "Area '"+regionName+"' created!");	
+			msgSuccess(player, "Area '"+regionName+"' created!");
+			return true;
 			
 		} else {
 			// Args 0 will be the region name of the area we are modifying

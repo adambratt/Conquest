@@ -16,7 +16,7 @@ public class AreaHandler {
 	private Area area;
 	
 	public AreaHandler(Area area){
-		area=this.area;
+		this.area = area;
 	}
 
 	public void onPlayerJoin(PlayerJoinEvent event) {
@@ -36,7 +36,7 @@ public class AreaHandler {
 	public void onPlayerMove(PlayerMoveEvent event) {
 		Player p = event.getPlayer();
 		
-		if (area.inRegion(event.getTo())){
+		if (area.inRegion( event.getTo() ) ){
 			if (!area.inArea(p)){
 				area.playerEnter(p);
 			}

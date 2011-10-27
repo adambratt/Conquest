@@ -39,21 +39,25 @@ public class Area {
 		this.name = region.getId();
 		this.region = region;
 		this.world = world;
-		aHandler = new AreaHandler(this);
 		areaPlayers = new HashSet<Player>();
 		raceCount = new HashMap<Race, Integer>();
 		advantageRace = null;
 		ownerRace = null;
 		capturingRace = null;
 		
-		loadRaces();
 		resetCapture();
+		init();
 	}
 	
 	public Area(ProtectedRegion region, World world, Race owner, String label){
 		this(region, world);
 		this.ownerRace = owner;
 		this.name = label;
+	}
+	
+	private void init(){
+		aHandler = new AreaHandler(this);
+		loadRaces();
 	}
 	
 	private void loadRaces(){
@@ -76,7 +80,10 @@ public class Area {
 	}
 	
 	public void save(){
-		Conquest.getDB().query("insert into conquest_areas(name,region,world,`time`,`timemodifier`,`maxhourly`,`owner`,`advantage`) values('"+name+"','"+region+"','"+world+"','"+maxTime+"','"+captureSpeed+"','"+maxHourly+"','"+ownerRace.getName()+"','"+advantage+"')");
+		String raceName = "";
+		if (ownerRace != null && ownerRace.getName() != null)
+			raceName = ownerRace.getName();
+		Conquest.getDB().query("insert into conquest_areas(name,region,world,`time`,`timemodifier`,`maxhourly`,`owner`,`advantage`) values('"+name+"','"+region.getId()+"','"+world.getName()+"','"+maxTime+"','"+captureSpeed+"','"+maxHourly+"','"+raceName+"','"+advantage+"')");
 		ConquestPlugin.info("Area for '"+name+"' was saved!");
 	}
 	
@@ -115,6 +122,7 @@ public class Area {
 			}
 			
 		}
+		statusUpdate();
 	}
 	
 	public Race raceAdvantage(){
@@ -222,7 +230,7 @@ public class Area {
 	
 	public boolean inRegion(Location loc) {
 		com.sk89q.worldedit.Vector v = new com.sk89q.worldedit.Vector(loc.getX(), loc.getY(), loc.getZ());
-		if (region.contains(v)) {
+		if (region != null && region.contains(v)) {
 		     return true;
 		}
 		return false;
@@ -259,7 +267,8 @@ public class Area {
 	}
 	
 	public void statusUpdate(){
-		String message = "------ Conquest of "+name+" ------ \n";
+		String message = 	"------ Conquest of "+name+" ------ \n";
+		message +=			"Start [======="+captureTime+" of "+maxTime+"=======]  Captured";
 		for (Player p : areaPlayers ){
 			p.sendMessage(message);
 		}
