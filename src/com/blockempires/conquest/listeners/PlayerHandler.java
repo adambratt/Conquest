@@ -19,46 +19,4 @@ public class PlayerHandler extends PlayerListener {
 		this.conquest = conquest;
 	}
 
-	@Override
-	public void onPlayerJoin(PlayerJoinEvent event) {
-		for (Area a : conquest.getAreas()){
-			a.getHandler().onPlayerJoin(event);
-		}
-	}
-
-	@Override
-	public void onPlayerMove(PlayerMoveEvent event) {
-		for (Area a : conquest.getAreas()){
-			a.getHandler().onPlayerMove(event);
-		}
-	}
-
-	@Override
-	public void onPlayerQuit(PlayerQuitEvent event) {
-		for (Area a : conquest.getAreas()){
-			a.getHandler().onPlayerQuit(event);
-		}
-	}
-
-	@Override
-	public void onPlayerRespawn(PlayerRespawnEvent event) {
-		for (Area a : conquest.getAreas()){
-			a.getHandler().onPlayerRespawn(event);
-		}
-	}
-
-	@Override
-	public void onPlayerKick(PlayerKickEvent event) {
-		for (Area a : conquest.getAreas()){
-			a.getHandler().onPlayerKick(event);
-		}
-	}
-
-	@Override
-	public void onPlayerTeleport(PlayerTeleportEvent event) {
-		for (Area a : conquest.getAreas()){
-			a.getHandler().onPlayerTeleport(event);
-		}
-	}
-
 }

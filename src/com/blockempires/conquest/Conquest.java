@@ -22,6 +22,8 @@ public class Conquest implements Runnable {
 	private Configuration config;
 	private MySQL db;
 	private static MySQL dbstatic;
+	public static int defendMoney;
+	public static int captureMoney;
 	
 	public Conquest(ConquestPlugin plugin){
 		this.plugin=plugin;
@@ -83,6 +85,8 @@ public class Conquest implements Runnable {
 		String port = config.getString("database.port", "3306");
 		String password = config.getString("database.password", "password");
 		this.db = new MySQL(plugin.getServer().getLogger(), "[Conquest] ", hostname, port, database, username, password);
+		Conquest.captureMoney = config.getInt("iconomy.captureReward", 200);
+		Conquest.defendMoney = config.getInt("iconomy.defendReward", 50);
 		config.save();
 	}
 	

@@ -1,5 +1,7 @@
 package com.blockempires.conquest.system;
 
+import java.util.Map;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -8,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import com.blockempires.conquest.Conquest;
 import com.blockempires.conquest.objects.Area;
+import com.blockempires.conquest.objects.Race;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class CommandHandler implements CommandExecutor {
@@ -21,14 +24,23 @@ public class CommandHandler implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		Player player = null;
 		if(sender instanceof Player){
-			if(!sender.isOp()){
-				if(!sender.hasPermission("conquest.edit")) return false;
-			}
 			player = (Player) sender;
 		}
 		
-		if(args.length < 1)
-			return usageMsg(player);
+		if(args.length < 1){
+			player.sendMessage(ChatColor.GREEN+"-------- Conquest List --------");
+			for (Area a : conquest.getAreas()){
+				int playerCount = a.getPlayers().size();
+				player.sendMessage(ChatColor.AQUA+a.getName()+"- "+ChatColor.DARK_PURPLE+"players:"+playerCount+" time:"+a.getTime()+"s race:"+a.getRace());
+			}
+			return true;
+		}
+		
+		
+		// Check permissions from here on out	
+		if (player != null && !sender.isOp()) {
+			if(!sender.hasPermission("conquest.edit")) return false;
+		}
 		
 		if (args[0].equalsIgnoreCase("create")){
 			// Used to create the regions
@@ -58,12 +70,17 @@ public class CommandHandler implements CommandExecutor {
 			
 			// If there's no arguments, return the info for the area
 			if(args.length == 1){
+				int playerCount = area.getPlayers().size();
 				player.sendMessage(ChatColor.GREEN+"-------- "+ChatColor.BLUE+args[0]+ChatColor.GREEN+" --------");
+				player.sendMessage(ChatColor.YELLOW+"players: "+ChatColor.WHITE+playerCount);
+				player.sendMessage(ChatColor.YELLOW+"time: "+ChatColor.WHITE+area.getTime()+"s");
+				player.sendMessage(ChatColor.YELLOW+"race: "+ChatColor.WHITE+area.getRace());
+				for (Map.Entry<Race, Integer> entry : area.getRaceCount().entrySet()) {
+					player.sendMessage(ChatColor.YELLOW+entry.getKey().getName()+": "+ChatColor.WHITE+entry.getValue());
+				}
 				// More info to go here eventually
 				return true;
 			}
-			
-			
 			
 		}
 		

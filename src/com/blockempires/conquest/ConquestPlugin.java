@@ -15,9 +15,11 @@ import com.blockempires.conquest.listeners.EntityHandler;
 import com.blockempires.conquest.listeners.PlayerHandler;
 import com.blockempires.conquest.system.CommandHandler;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import com.iConomy.iConomy;
 
 public class ConquestPlugin extends JavaPlugin{
 	private static WorldGuardPlugin wgPlugin;
+	private static iConomy iConomy;
 	private File dir;
 	private Conquest conquest;
 	private PluginManager pManage;
@@ -59,6 +61,15 @@ public class ConquestPlugin extends JavaPlugin{
 			error("WorldGuard does not appear to be installed and is REQUIRED by Conquest");
 			pManage.disablePlugin(this);
 		}
+    	// iConomy
+    	if (pManage.isPluginEnabled("iConomy")){
+			Plugin econ = pManage.getPlugin("iConomy");
+			if (econ instanceof iConomy)
+				iConomy = (iConomy) econ;
+		} else {
+			error("iConomy does not appear to be installed and is REQUIRED by Conquest");
+			pManage.disablePlugin(this);
+		}
 	}
 
 	private void loadCommands() {
@@ -73,12 +84,6 @@ public class ConquestPlugin extends JavaPlugin{
 		EntityListener entityListener = new EntityHandler(this.conquest);
 		PlayerListener playerListener = new PlayerHandler(this.conquest);
 		pManage.registerEvent(Event.Type.ENTITY_DEATH, entityListener, Priority.Monitor, this);
-		pManage.registerEvent(Event.Type.PLAYER_JOIN, playerListener, Priority.Monitor, this);
-		pManage.registerEvent(Event.Type.PLAYER_TELEPORT, playerListener, Priority.Monitor, this);
-		pManage.registerEvent(Event.Type.PLAYER_RESPAWN, playerListener, Priority.Monitor, this);
-		pManage.registerEvent(Event.Type.PLAYER_KICK, playerListener, Priority.Monitor, this);
-		pManage.registerEvent(Event.Type.PLAYER_QUIT, playerListener, Priority.Monitor, this);
-		pManage.registerEvent(Event.Type.PLAYER_MOVE, playerListener, Priority.Monitor, this);
 	}
 
 	//Console loggers
@@ -88,6 +93,10 @@ public class ConquestPlugin extends JavaPlugin{
 	
 	public static WorldGuardPlugin getWorldGuard(){
 		return ConquestPlugin.wgPlugin;
+	}
+	
+	public static iConomy getiConomy(){
+		return ConquestPlugin.iConomy;
 	}
 
 }

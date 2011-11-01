@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -13,6 +14,8 @@ import org.bukkit.entity.Player;
 import com.blockempires.conquest.Conquest;
 import com.blockempires.conquest.ConquestPlugin;
 import com.blockempires.conquest.listeners.AreaHandler;
+import com.iConomy.iConomy;
+import com.iConomy.system.Account;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Area {
@@ -26,7 +29,7 @@ public class Area {
 	
 	private int captureSpeed = 1;	// Default for now
 	private int captureTime;		// Counter until capture
-	private int maxTime = 90;		// Default time to capture
+	private int maxTime = 180;		// Default time to capture
 	private int captureMomentum;	// 0 if not being captured, -1 if being recaptured by owner, 1 if being captured by another race
 	private int maxHourly = 0;		// 0 for infinite number, otherwise a number for max number of captures per hour
 	private int advantage = 2;		// The necessary advantage by the leading race
@@ -57,14 +60,16 @@ public class Area {
 	
 	private void init(){
 		aHandler = new AreaHandler(this);
-		loadRaces();
+		raceCount = getRaces();
 	}
 	
-	private void loadRaces(){
+	private HashMap<Race, Integer> getRaces(){
 		Set<Race> racelist = Race.getRaceList();
+		HashMap<Race, Integer> races = new HashMap<Race, Integer>();
 		for (Race r : racelist){
-			raceCount.put(r, 0);
+			races.put(r, 0);
 		}
+		return races;
 	}
 
 	public void resetCapture(){
@@ -88,8 +93,8 @@ public class Area {
 	}
 	
 	public void runCapture(){
-		// Lets just double check the advantage quick
-		/// updateAdvantage();
+		// Lets just check the advantage quick
+		updateAdvantage();
 		
 		if (captureMomentum == 0){
 			// Nothing happening, reset the clock and get out of here
@@ -101,6 +106,8 @@ public class Area {
 			captureTime -= captureSpeed;
 			if (captureTime <= 0){
 				resetCapture();
+				if (ownerRace != null)
+					rewardRace(ownerRace, Conquest.defendMoney);
 				statusRestored();
 			}
 			
@@ -112,46 +119,60 @@ public class Area {
 					// Player capture
 					ownerChange(capturingRace);
 					resetCapture();
-					statusCaptured();
+					statusCaptured(ownerRace.getName());
 				} else {
 					// Neutral capture
-					ownerChange(capturingRace);
+					ownerChange(null);
 					resetCapture();
 					statusNeutralized();
 				}
 			}
 			
 		}
-		statusUpdate();
+		if (captureTime > 0 && (captureTime % 10) == 0)
+			statusUpdate();
 	}
 	
-	public Race raceAdvantage(){
-		int maxCount = 0;
+	private void updateAdvantage(){
+		// Initialize for calculating the new advantage
+		int leadCount = 0;
 		int secondCount = 0;
-		Race maxRace = null;
-		for (Map.Entry<Race, Integer> entry : raceCount.entrySet()) {
-			if (entry.getValue() > maxCount){
-				secondCount = maxCount;
-				maxCount = entry.getValue();
-				maxRace = entry.getKey();
-			} else if (entry.getValue() == maxCount && maxCount > 0){
+		Race newAdvantage = null;
+		HashSet<Player> newPlayers = new HashSet<Player>();
+		HashMap<Race, Integer> newCount = getRaces();
+		
+		// Build Race Counts
+		for (Player p : world.getPlayers()){
+			if (!p.isDead() && inRegion(p.getLocation())){
+				Race playerRace = Race.getRace(p);
+				if (playerRace != null){
+					newPlayers.add(p);
+					newCount.put(playerRace, newCount.get(playerRace)+1);
+				}
+			}
+		}
+		
+		// Calculate Advantage
+		for (Map.Entry<Race, Integer> entry : newCount.entrySet()) {
+			if (entry.getValue() > leadCount){
+				secondCount = leadCount;
+				leadCount = entry.getValue();
+				newAdvantage = entry.getKey();
+			} else if (entry.getValue() == leadCount && leadCount > 0){
 				// If there are two races tied for first, there is no advantage
-				maxRace = null;
+				newAdvantage = null;
 			} else if (entry.getValue() > secondCount){
 				secondCount = entry.getValue();
 			}
 		}
-		// If less than "advantage" advantage, remove advantage
-		if (maxCount < secondCount+advantage)
-			maxRace = null;
-		return maxRace;
-	}
-	
-	public void updateAdvantage(){
-		Race newAdvantage = raceAdvantage();
+		
+		// If less than required advantage, set advantage to null
+		if (leadCount < secondCount+advantage)
+			newAdvantage = null;
+		
+		
+		// If Advantage has changed, take action
 		if (newAdvantage != advantageRace){
-			// Advantage has changed, take action
-			
 			if (ownerRace == null){
 				// Phase is neutral -> captured
 				if (newAdvantage == null){
@@ -162,7 +183,7 @@ public class Area {
 					resetCapture();
 					captureMomentum = 1;
 					capturingRace = newAdvantage;
-					statusCapturing();
+					statusCapturing(capturingRace.getName());
 				} else {
 					// Capturing race has gained the edge again
 					captureMomentum = 1;
@@ -187,11 +208,32 @@ public class Area {
 			// And assign the new advantage!
 			advantageRace = newAdvantage;
 		}
+		
+		// Assign new player/race count
+		raceCount = newCount;
+		areaPlayers = newPlayers;
 	}
 	
 	public void ownerChange(Race owner){
+		//  Update object owner
 		ownerRace = owner;
+		
+		// Get Name for MySQL
+		String raceName = "";
+		if (ownerRace != null && ownerRace.getName() != null){
+			raceName = ownerRace.getName();
+			rewardRace(ownerRace, Conquest.captureMoney);
+		}
+		
 		// Update config/SQL
+		Conquest.getDB().query("update conquest_areas set `owner`='"+raceName+"' where `region`='"+region.getId()+"'");
+	}
+	
+	public void rewardRace(Race race, int money){
+		for (Player p : getRacePlayers(race)){
+			Account account = iConomy.getAccount(p.getName());
+			if(account!=null) account.getHoldings().add(money);
+		}
 	}
 	
 	public String getName(){
@@ -240,37 +282,29 @@ public class Area {
 		return areaPlayers.contains(p);
 	}
 	
-	public void playerEnter(Player player){
-		Race playerRace = Race.getRace(player);
-		if (playerRace != null){
-			areaPlayers.add(player);
-			raceCount.put(playerRace, raceCount.get(playerRace)+1);
-			updateAdvantage();
-		}
-	}
-	
-	public void playerExit(Player player){
-		Race playerRace = Race.getRace(player);
-		if (playerRace != null){
-			areaPlayers.remove(player);
-			raceCount.put(playerRace, raceCount.get(playerRace)-1);
-			updateAdvantage();
-		}
-	}
-	
 	public void sendStatus(String status){
 		
 	}
 	
 	public void sendStatusGlobal(String status){
-		Bukkit.getServer().broadcastMessage("[Conquest] "+status);
+		Bukkit.getServer().broadcastMessage(ChatColor.AQUA+"[Conquest] "+ChatColor.GREEN+status);
 	}
 	
-	public void statusUpdate(){
-		String message = 	"------ Conquest of "+name+" ------ \n";
-		message +=			"Start [======="+captureTime+" of "+maxTime+"=======]  Captured";
+	public void statusUpdate(){		
+		String status = ChatColor.AQUA+"Start ["+ChatColor.RED;
+		for (int i = 0; i < maxTime; i++){
+			if ((i % 10) == 0){
+				if (captureTime >= i){
+					status += "x";
+				} else {
+					status += "-";
+				}
+			}
+		}
+		status += "] Captured";
 		for (Player p : areaPlayers ){
-			p.sendMessage(message);
+			p.sendMessage(ChatColor.GREEN+"-------- Conquest of "+name+" --------");
+			p.sendMessage(status);
 		}
 	}
 	
@@ -284,19 +318,33 @@ public class Area {
 		sendStatusGlobal(message);
 	}
 	
-	public void statusCapturing(){
-		String message = "Attempts are being made to capture  "+name+"!";
+	public void statusCapturing(String raceName){
+		String message = "Attempts are being made to capture  "+name+" "+ChatColor.AQUA+"("+raceName+")";
 		sendStatusGlobal(message);
 	}
 	
-	public void statusCaptured(){
-		String message = name+" has been successfully captured!";
+	public void statusCaptured(String raceName){
+		String message = name+" has been successfully captured "+ChatColor.AQUA+"("+raceName+")";
 		sendStatusGlobal(message);
 	}
 	
 	public void statusRestored(){
 		String message = "Order in "+name+" has been restored!";
 		sendStatusGlobal(message);
+	}
+
+	public String getRace() {
+		if (ownerRace == null)
+			return "Neutral";
+		return ownerRace.getName();
+	}
+
+	public int getTime() {
+		return captureTime;
+	}
+
+	public HashMap<Race, Integer> getRaceCount() {
+		return raceCount;
 	}
 	
 }
