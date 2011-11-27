@@ -11,6 +11,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import ru.tehkode.permissions.bukkit.PermissionsEx;
+
 import com.blockempires.conquest.listeners.EntityHandler;
 import com.blockempires.conquest.listeners.PlayerHandler;
 import com.blockempires.conquest.system.CommandHandler;
@@ -23,7 +25,8 @@ public class ConquestPlugin extends JavaPlugin{
 	private File dir;
 	private Conquest conquest;
 	private PluginManager pManage;
-
+	private static PermissionsEx permissions;
+	
 	public void onDisable() {
 		if (conquest != null){
 			conquest.shutdown();
@@ -59,8 +62,15 @@ public class ConquestPlugin extends JavaPlugin{
 				wgPlugin = (WorldGuardPlugin) wg;
 		} else {
 			error("WorldGuard does not appear to be installed and is REQUIRED by Conquest");
-			pManage.disablePlugin(this);
 		}
+    	if (pManage.isPluginEnabled("PermissionsEx")){
+    		Plugin pex = pManage.getPlugin("PermissionsEx");
+    		if (pex instanceof PermissionsEx){
+    			permissions = (PermissionsEx)pex;
+    		}else {
+    			error("PermissionsEx Broke!");
+    		}
+    	}
     	// iConomy
     	if (pManage.isPluginEnabled("iConomy")){
 			Plugin econ = pManage.getPlugin("iConomy");
@@ -68,7 +78,6 @@ public class ConquestPlugin extends JavaPlugin{
 				iConomy = (iConomy) econ;
 		} else {
 			error("iConomy does not appear to be installed and is REQUIRED by Conquest");
-			pManage.disablePlugin(this);
 		}
 	}
 
@@ -93,6 +102,10 @@ public class ConquestPlugin extends JavaPlugin{
 	
 	public static WorldGuardPlugin getWorldGuard(){
 		return ConquestPlugin.wgPlugin;
+	}
+	
+	public static PermissionsEx getpermissions(){
+		return ConquestPlugin.permissions;
 	}
 	
 	public static iConomy getiConomy(){

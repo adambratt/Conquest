@@ -79,8 +79,8 @@ public class Area {
 	}
 	
 	public boolean isRunning(){
-		if (captureMomentum == 0 && captureTime == 0)
-			return false;
+		//if (captureMomentum == 0 && captureTime == 0)
+		//	return false;
 		return true;
 	}
 	

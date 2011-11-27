@@ -5,6 +5,8 @@ import java.util.Set;
 
 import org.bukkit.entity.Player;
 
+import com.blockempires.conquest.ConquestPlugin;
+
 public class Race {
 	private String name;
 	private static Set<Race> racelist;
@@ -23,13 +25,13 @@ public class Race {
 
 	public static Race getRace(Player player) {
 		for (Race r : getRaceList()){
-			if(r.getName().equalsIgnoreCase("Dwarf") && player.hasPermission("lineage.race.Dwarf"))
+			if(r.getName().equalsIgnoreCase("Dwarf") && ConquestPlugin.getpermissions().has(player, "lineage.race.Dwarf"))
 				return r;
-			if(r.getName().equalsIgnoreCase("Elf") && player.hasPermission("lineage.race.Elf"))
+			if(r.getName().equalsIgnoreCase("Elf") && ConquestPlugin.getpermissions().has(player, "lineage.race.Elf"))
 				return r;
-			if(r.getName().equalsIgnoreCase("Human") && player.hasPermission("lineage.race.Human"))
+			if(r.getName().equalsIgnoreCase("Human") && ConquestPlugin.getpermissions().has(player, "lineage.race.Human"))
 				return r;
-			if(r.getName().equalsIgnoreCase("Orc") && player.hasPermission("lineage.race.Orc"))
+			if(r.getName().equalsIgnoreCase("Orc") && ConquestPlugin.getpermissions().has(player, "lineage.race.Orc"))
 				return r;
 		}
 		return null;
