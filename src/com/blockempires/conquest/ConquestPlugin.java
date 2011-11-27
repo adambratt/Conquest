@@ -7,6 +7,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.server.ServerListener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,17 +16,18 @@ import ru.tehkode.permissions.bukkit.PermissionsEx;
 
 import com.blockempires.conquest.listeners.EntityHandler;
 import com.blockempires.conquest.listeners.PlayerHandler;
+import com.blockempires.conquest.listeners.PluginHandler;
 import com.blockempires.conquest.system.CommandHandler;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.iConomy.iConomy;
 
 public class ConquestPlugin extends JavaPlugin{
 	private static WorldGuardPlugin wgPlugin;
-	private static iConomy iConomy;
+	public static iConomy iConomy;
 	private File dir;
 	private Conquest conquest;
 	private PluginManager pManage;
-	private static PermissionsEx permissions;
+	public static PermissionsEx permissions;
 	
 	public void onDisable() {
 		if (conquest != null){
@@ -66,10 +68,11 @@ public class ConquestPlugin extends JavaPlugin{
     	if (pManage.isPluginEnabled("PermissionsEx")){
     		Plugin pex = pManage.getPlugin("PermissionsEx");
     		if (pex instanceof PermissionsEx){
-    			permissions = (PermissionsEx)pex;
-    		}else {
-    			error("PermissionsEx Broke!");
+    			permissions = (PermissionsEx) pex;
+    			info("PermissionsEx has been enabled!");
     		}
+    	}else {
+    		error("PermissionsEx Broke!");
     	}
     	// iConomy
     	if (pManage.isPluginEnabled("iConomy")){
@@ -92,8 +95,11 @@ public class ConquestPlugin extends JavaPlugin{
 	private void loadEvents() {
 		EntityListener entityListener = new EntityHandler(this.conquest);
 		PlayerListener playerListener = new PlayerHandler(this.conquest);
+		ServerListener pluginListener = new PluginHandler(this);
 		pManage.registerEvent(Event.Type.ENTITY_DEATH, entityListener, Priority.Monitor, this);
+		pManage.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
 	}
+	
 
 	//Console loggers
 	public static void info(String msg)    { Bukkit.getServer().getLogger().info("[Conquest] " + msg); }

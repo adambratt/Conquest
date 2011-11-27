@@ -24,6 +24,10 @@ public class Race {
 	}
 
 	public static Race getRace(Player player) {
+		if (ConquestPlugin.getpermissions() == null){
+			ConquestPlugin.error("error with Pex");
+			return null;
+		}
 		for (Race r : getRaceList()){
 			if(r.getName().equalsIgnoreCase("Dwarf") && ConquestPlugin.getpermissions().has(player, "lineage.race.Dwarf"))
 				return r;

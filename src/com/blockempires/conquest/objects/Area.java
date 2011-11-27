@@ -145,10 +145,13 @@ public class Area {
 		for (Player p : world.getPlayers()){
 			if (!p.isDead() && inRegion(p.getLocation())){
 				Race playerRace = Race.getRace(p);
+				String x = "none";
 				if (playerRace != null){
 					newPlayers.add(p);
 					newCount.put(playerRace, newCount.get(playerRace)+1);
+					x=playerRace.getName();
 				}
+				ConquestPlugin.error(name+" tracking "+p.getName()+" and race is "+x);
 			}
 		}
 		
