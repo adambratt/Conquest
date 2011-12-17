@@ -29,7 +29,7 @@ public class Area {
 	
 	private int captureSpeed = 1;	// Default for now
 	private int captureTime;		// Counter until capture
-	private int maxTime = 240;		// Default time to capture
+	private int maxTime = 180;		// Default time to capture
 	private int captureMomentum;	// 0 if not being captured, -1 if being recaptured by owner, 1 if being captured by another race
 	private int maxHourly = 0;		// 0 for infinite number, otherwise a number for max number of captures per hour
 	private int advantage = 2;		// The necessary advantage by the leading race
@@ -78,6 +78,12 @@ public class Area {
 		captureMomentum = 0;
 		capturingRace = null;
 		advantageRace = null;
+	}
+	
+	public boolean isRunning(){
+		//if (captureMomentum == 0 && captureTime == 0)
+		//	return false;
+		return true;
 	}
 	
 	public void save(){
@@ -144,10 +150,13 @@ public class Area {
 		for (Player p : world.getPlayers()){
 			if (!p.isDead() && inRegion(p.getLocation())){
 				Race playerRace = Race.getRace(p);
+				String x = "none";
 				if (playerRace != null){
 					newPlayers.add(p);
 					newCount.put(playerRace, newCount.get(playerRace)+1);
+					x=playerRace.getName();
 				}
+				ConquestPlugin.error(name+" tracking "+p.getName()+" and race is "+x);
 			}
 		}
 		

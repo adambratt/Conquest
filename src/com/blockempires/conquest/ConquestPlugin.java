@@ -12,6 +12,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import ru.tehkode.permissions.bukkit.PermissionsEx;
+
 import com.blockempires.conquest.listeners.EntityHandler;
 import com.blockempires.conquest.listeners.PlayerHandler;
 import com.blockempires.conquest.listeners.PluginHandler;
@@ -25,7 +27,8 @@ public class ConquestPlugin extends JavaPlugin{
 	private File dir;
 	private Conquest conquest;
 	private PluginManager pManage;
-
+	public static PermissionsEx permissions;
+	
 	public void onDisable() {
 		if (conquest != null){
 			conquest.shutdown();
@@ -62,6 +65,15 @@ public class ConquestPlugin extends JavaPlugin{
 		} else {
 			error("WorldGuard does not appear to be installed and is REQUIRED by Conquest");
 		}
+    	if (pManage.isPluginEnabled("PermissionsEx")){
+    		Plugin pex = pManage.getPlugin("PermissionsEx");
+    		if (pex instanceof PermissionsEx){
+    			permissions = (PermissionsEx) pex;
+    			info("PermissionsEx has been enabled!");
+    		}
+    	}else {
+    		error("PermissionsEx Broke!");
+    	}
     	// iConomy
     	if (pManage.isPluginEnabled("iConomy")){
 			Plugin econ = pManage.getPlugin("iConomy");
@@ -83,10 +95,11 @@ public class ConquestPlugin extends JavaPlugin{
 	private void loadEvents() {
 		EntityListener entityListener = new EntityHandler(this.conquest);
 		PlayerListener playerListener = new PlayerHandler(this.conquest);
-		ServerListener pluginListener = new PluginHandler(this.conquest);
+		ServerListener pluginListener = new PluginHandler(this);
 		pManage.registerEvent(Event.Type.ENTITY_DEATH, entityListener, Priority.Monitor, this);
 		pManage.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
 	}
+	
 
 	//Console loggers
 	public static void info(String msg)    { Bukkit.getServer().getLogger().info("[Conquest] " + msg); }
@@ -95,6 +108,10 @@ public class ConquestPlugin extends JavaPlugin{
 	
 	public static WorldGuardPlugin getWorldGuard(){
 		return ConquestPlugin.wgPlugin;
+	}
+	
+	public static PermissionsEx getpermissions(){
+		return ConquestPlugin.permissions;
 	}
 	
 	public static iConomy getiConomy(){
