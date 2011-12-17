@@ -40,9 +40,7 @@ public class Conquest implements Runnable {
 	@Override
 	public void run() {
 		for (Area a : areaList){
-			if(a.isRunning()){
-				a.runCapture();
-			}
+			a.runCapture();
 		}
 		
 	}
@@ -116,8 +114,7 @@ public class Conquest implements Runnable {
 				return;
 			}
 		} else {
-			ConquestPlugin.error("Could not connect to database, check configuration. Conquest is disabling...");
-			plugin.getServer().getPluginManager().disablePlugin(plugin);
+			ConquestPlugin.error("Could not connect to database, check configuration. Conquest is crippled...");
 		}
 	}
 	

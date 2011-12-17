@@ -31,7 +31,7 @@ public class CommandHandler implements CommandExecutor {
 			player.sendMessage(ChatColor.GREEN+"-------- Conquest List --------");
 			for (Area a : conquest.getAreas()){
 				int playerCount = a.getPlayers().size();
-				player.sendMessage(ChatColor.AQUA+a.getName()+"- "+ChatColor.DARK_PURPLE+"players:"+playerCount+" time:"+a.getTime()+"s race:"+a.getRace());
+				player.sendMessage(ChatColor.AQUA+" - "+a.getName()+"- "+ChatColor.WHITE+"Players: "+playerCount+"  Race: "+a.getRace());
 			}
 			return true;
 		}

@@ -29,7 +29,7 @@ public class Area {
 	
 	private int captureSpeed = 1;	// Default for now
 	private int captureTime;		// Counter until capture
-	private int maxTime = 180;		// Default time to capture
+	private int maxTime = 240;		// Default time to capture
 	private int captureMomentum;	// 0 if not being captured, -1 if being recaptured by owner, 1 if being captured by another race
 	private int maxHourly = 0;		// 0 for infinite number, otherwise a number for max number of captures per hour
 	private int advantage = 2;		// The necessary advantage by the leading race
@@ -74,14 +74,10 @@ public class Area {
 
 	public void resetCapture(){
 		captureTime = 0;
+		captureSpeed = 1;
 		captureMomentum = 0;
 		capturingRace = null;
-	}
-	
-	public boolean isRunning(){
-		if (captureMomentum == 0 && captureTime == 0)
-			return false;
-		return true;
+		advantageRace = null;
 	}
 	
 	public void save(){
@@ -105,9 +101,10 @@ public class Area {
 			// Being returned to owner
 			captureTime -= captureSpeed;
 			if (captureTime <= 0){
+				statusUpdate();
 				resetCapture();
 				if (ownerRace != null)
-					rewardRace(ownerRace, Conquest.defendMoney);
+					captureRewardRace(ownerRace, Conquest.defendMoney);
 				statusRestored();
 			}
 			
@@ -117,11 +114,13 @@ public class Area {
 			if (captureTime >= maxTime){
 				if (ownerRace == null){
 					// Player capture
+					statusUpdate();
 					ownerChange(capturingRace);
 					resetCapture();
 					statusCaptured(ownerRace.getName());
 				} else {
 					// Neutral capture
+					statusUpdate();
 					ownerChange(null);
 					resetCapture();
 					statusNeutralized();
@@ -169,6 +168,10 @@ public class Area {
 		// If less than required advantage, set advantage to null
 		if (leadCount < secondCount+advantage)
 			newAdvantage = null;
+		else if (leadCount > secondCount+advantage)
+			captureSpeed = leadCount - secondCount - 1;
+		else
+			captureSpeed = 1;
 		
 		
 		// If Advantage has changed, take action
@@ -202,7 +205,9 @@ public class Area {
 				} else {
 					// Someone is capturing it
 					captureMomentum = 1;
-					statusNeutralizing();
+					// Gotta make sure we aren't already mid capture with an advantage change
+					if (captureTime < 1)
+						statusNeutralizing();
 				}
 			}
 			// And assign the new advantage!
@@ -222,17 +227,18 @@ public class Area {
 		String raceName = "";
 		if (ownerRace != null && ownerRace.getName() != null){
 			raceName = ownerRace.getName();
-			rewardRace(ownerRace, Conquest.captureMoney);
+			captureRewardRace(ownerRace, Conquest.captureMoney);
 		}
 		
 		// Update config/SQL
 		Conquest.getDB().query("update conquest_areas set `owner`='"+raceName+"' where `region`='"+region.getId()+"'");
 	}
 	
-	public void rewardRace(Race race, int money){
+	public void captureRewardRace(Race race, int money){
 		for (Player p : getRacePlayers(race)){
 			Account account = iConomy.getAccount(p.getName());
 			if(account!=null) account.getHoldings().add(money);
+			p.sendMessage(ChatColor.GREEN+"[Conquest] You received "+ChatColor.AQUA+money+ChatColor.GREEN+" silver!");
 		}
 	}
 	
@@ -250,7 +256,7 @@ public class Area {
 	
 	public HashSet<Player> getRacePlayers(Race race){
 		HashSet<Player> racePlayers = new HashSet<Player>();
-		for (Player p : racePlayers){
+		for (Player p : areaPlayers){
 			if (Race.getRace(p) == race){
 				racePlayers.add(p);
 			}
@@ -291,17 +297,31 @@ public class Area {
 	}
 	
 	public void statusUpdate(){		
-		String status = ChatColor.AQUA+"Start ["+ChatColor.RED;
-		for (int i = 0; i < maxTime; i++){
-			if ((i % 10) == 0){
+		// Build Capture Bar
+		String status = "";
+		String statusEnd = ChatColor.WHITE+"] ";
+		if (ownerRace == null || ownerRace.getName() == ""){
+			if (capturingRace == null)
+				return;
+			status += ChatColor.GRAY+"Neutral ";
+			statusEnd += ChatColor.BLUE+capturingRace.getName();
+		} else {
+			status += ChatColor.DARK_RED+ownerRace.getName()+" ";
+			statusEnd += ChatColor.GRAY+"Neutral";
+		}
+		status += ChatColor.WHITE+"["+ChatColor.BLUE+"|";
+		for (int i = 9; i < maxTime; i++){
+			if ((i % 8) == 0){
 				if (captureTime >= i){
-					status += "x";
+					status += "|";
 				} else {
-					status += "-";
+					status += ChatColor.DARK_RED+"|";
 				}
 			}
 		}
-		status += "] Captured";
+		status += statusEnd;
+		
+		// Send out to players
 		for (Player p : areaPlayers ){
 			p.sendMessage(ChatColor.GREEN+"-------- Conquest of "+name+" --------");
 			p.sendMessage(status);
@@ -319,7 +339,7 @@ public class Area {
 	}
 	
 	public void statusCapturing(String raceName){
-		String message = "Attempts are being made to capture  "+name+" "+ChatColor.AQUA+"("+raceName+")";
+		String message = "Attempts are being made to capture "+name+" "+ChatColor.AQUA+"("+raceName+")";
 		sendStatusGlobal(message);
 	}
 	

@@ -7,19 +7,21 @@ import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.entity.EntityListener;
 import org.bukkit.event.player.PlayerListener;
+import org.bukkit.event.server.ServerListener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.blockempires.conquest.listeners.EntityHandler;
 import com.blockempires.conquest.listeners.PlayerHandler;
+import com.blockempires.conquest.listeners.PluginHandler;
 import com.blockempires.conquest.system.CommandHandler;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.iConomy.iConomy;
 
 public class ConquestPlugin extends JavaPlugin{
 	private static WorldGuardPlugin wgPlugin;
-	private static iConomy iConomy;
+	public static iConomy iConomy;
 	private File dir;
 	private Conquest conquest;
 	private PluginManager pManage;
@@ -59,7 +61,6 @@ public class ConquestPlugin extends JavaPlugin{
 				wgPlugin = (WorldGuardPlugin) wg;
 		} else {
 			error("WorldGuard does not appear to be installed and is REQUIRED by Conquest");
-			pManage.disablePlugin(this);
 		}
     	// iConomy
     	if (pManage.isPluginEnabled("iConomy")){
@@ -68,7 +69,6 @@ public class ConquestPlugin extends JavaPlugin{
 				iConomy = (iConomy) econ;
 		} else {
 			error("iConomy does not appear to be installed and is REQUIRED by Conquest");
-			pManage.disablePlugin(this);
 		}
 	}
 
@@ -83,7 +83,9 @@ public class ConquestPlugin extends JavaPlugin{
 	private void loadEvents() {
 		EntityListener entityListener = new EntityHandler(this.conquest);
 		PlayerListener playerListener = new PlayerHandler(this.conquest);
+		ServerListener pluginListener = new PluginHandler(this.conquest);
 		pManage.registerEvent(Event.Type.ENTITY_DEATH, entityListener, Priority.Monitor, this);
+		pManage.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
 	}
 
 	//Console loggers
