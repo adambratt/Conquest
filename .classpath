@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="Conquest.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/Users/adam/Sites/Minecraft Dev/server/plugins/WorldGuard.jar"/>
+	<classpathentry kind="lib" path="/Users/adam/Sites/Minecraft Dev/server/plugins/WorldEdit.jar"/>
+	<classpathentry kind="lib" path="/Users/adam/Sites/Minecraft Dev/server/plugins/Heroes.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://bukkit.onarandombox.com/heroes/jd/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/adam/Sites/Minecraft Dev/server/plugins/iConomy.jar"/>
+	<classpathentry kind="lib" path="/Users/adam/Sites/Minecraft Dev/bukkit-0.0.1-SNAPSHOT.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://jd.bukkit.org/apidocs/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
