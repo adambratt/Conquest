@@ -29,6 +29,8 @@ public class Race {
 			return null;
 		}
 		for (Race r : getRaceList()){
+			if(r.getName().equalsIgnoreCase("Eclipse") && ConquestPlugin.getpermissions().has(player, "lineage.staff"))
+				return r;
 			if(r.getName().equalsIgnoreCase("Dwarf") && ConquestPlugin.getpermissions().has(player, "lineage.race.Dwarf"))
 				return r;
 			if(r.getName().equalsIgnoreCase("Elf") && ConquestPlugin.getpermissions().has(player, "lineage.race.Elf"))
@@ -53,6 +55,8 @@ public class Race {
 			racelist.add(human);
 			Race orc = new Race("Orc");
 			racelist.add(orc);
+			Race staff = new Race("Eclipse");
+			racelist.add(staff);
 			return racelist;			
 		}
 		return racelist;

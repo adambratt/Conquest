@@ -1,5 +1,7 @@
 package com.blockempires.conquest.objects;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -20,6 +22,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Area {
 	
+	private int dbid;
 	private String name;
 	private World world;
 	private ProtectedRegion region;
@@ -52,10 +55,11 @@ public class Area {
 		init();
 	}
 	
-	public Area(ProtectedRegion region, World world, Race owner, String label){
+	public Area(int id, ProtectedRegion region, World world, Race owner, String label){
 		this(region, world);
 		this.ownerRace = owner;
 		this.name = label;
+		this.dbid = id;
 	}
 	
 	private void init(){
@@ -92,6 +96,15 @@ public class Area {
 			raceName = ownerRace.getName();
 		Conquest.getDB().query("insert into conquest_areas(name,region,world,`time`,`timemodifier`,`maxhourly`,`owner`,`advantage`) values('"+name+"','"+region.getId()+"','"+world.getName()+"','"+maxTime+"','"+captureSpeed+"','"+maxHourly+"','"+raceName+"','"+advantage+"')");
 		ConquestPlugin.info("Area for '"+name+"' was saved!");
+		ResultSet q = Conquest.getDB().query("select * from conquest_areas where `region`='"+region.getId()+"'");
+		try {
+			if (q.first()){
+				this.dbid=q.getInt("id");
+			}
+		} catch (SQLException e) {
+			return;
+		}
+		
 	}
 	
 	public void runCapture(){
@@ -177,9 +190,14 @@ public class Area {
 		// If less than required advantage, set advantage to null
 		if (leadCount < secondCount+advantage)
 			newAdvantage = null;
-		else if (leadCount > secondCount+advantage)
-			captureSpeed = leadCount - secondCount - 1;
-		else
+		else if (leadCount > secondCount+advantage){
+			int oldSpeed = leadCount - secondCount - 1;
+			if (oldSpeed > 2)
+				captureSpeed = 2;
+			if (oldSpeed > 4)
+				captureSpeed = 3;
+			captureSpeed = 1;
+		}else
 			captureSpeed = 1;
 		
 		
@@ -241,6 +259,15 @@ public class Area {
 		
 		// Update config/SQL
 		Conquest.getDB().query("update conquest_areas set `owner`='"+raceName+"' where `region`='"+region.getId()+"'");
+		Conquest.getDB().query("insert into conquest_captures(`race`,`area_id`) VALUES('"+raceName+"','"+this.dbid+"')");
+		
+		if(ownerRace != null){
+			Set<Player> players = getRacePlayers(ownerRace);
+			for (Player p : players){
+				Conquest.getDB().query("insert into conquest_captures_player(`players`) VALUES('"+p.getName()+"')");
+			}
+		}
+		
 	}
 	
 	public void captureRewardRace(Race race, int money){
@@ -248,6 +275,7 @@ public class Area {
 			Account account = iConomy.getAccount(p.getName());
 			if(account!=null) account.getHoldings().add(money);
 			p.sendMessage(ChatColor.GREEN+"[Conquest] You received "+ChatColor.AQUA+money+ChatColor.GREEN+" silver!");
+			p.sendMessage(ChatColor.GREEN+"[Conquest] If your race holds this location you will receive silver ever hour!");
 		}
 	}
 	

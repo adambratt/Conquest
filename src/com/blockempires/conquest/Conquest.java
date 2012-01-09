@@ -6,11 +6,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.util.config.Configuration;
 
 import com.blockempires.conquest.objects.Area;
 import com.blockempires.conquest.objects.Race;
+import com.iConomy.iConomy;
+import com.iConomy.system.Account;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import lib.PatPeter.SQLibrary.*;
 
@@ -24,6 +28,7 @@ public class Conquest implements Runnable {
 	private static MySQL dbstatic;
 	public static int defendMoney;
 	public static int captureMoney;
+	public int counter = 0;
 	
 	public Conquest(ConquestPlugin plugin){
 		this.plugin=plugin;
@@ -35,14 +40,32 @@ public class Conquest implements Runnable {
 		loadDatabase();
 		loadAreas();
 	}
-	
 
 	@Override
 	public void run() {
 		for (Area a : areaList){
 			a.runCapture();
 		}
-		
+		counter++;
+		if (counter > 3600) {
+			counter = 0;
+			runHourly();
+		}
+	}
+	
+	private void runHourly() {
+		double money = 5;
+		for (Area a : areaList){
+			String r = a.getRace();
+			for (Player p : a.getWorld().getPlayers()){
+				Race rp = Race.getRace(p);
+				if (rp != null && rp.getName() == r){
+					Account account = iConomy.getAccount(p.getName());
+					if(account!=null) account.getHoldings().add(money);
+					p.sendMessage(ChatColor.GREEN+"[Conquest] Taxes on "+a.getName()+" netted "+ChatColor.AQUA+money+ChatColor.GREEN+" silver!");
+				}
+			}
+		}
 	}
 	
 	private void loadAreas(){
@@ -105,7 +128,7 @@ public class Conquest implements Runnable {
 					ProtectedRegion region = getRegion(areaResult.getString("region"), world);
 					if (region == null)
 						continue;
-					Area a = new Area(region, world, Race.getRace(areaResult.getString("owner")), areaResult.getString("name"));
+					Area a = new Area(areaResult.getInt("id"), region, world, Race.getRace(areaResult.getString("owner")), areaResult.getString("name"));
 					areaList.add(a);
 				}
 			} catch (SQLException e) {
