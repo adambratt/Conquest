@@ -1,7 +1,7 @@
 name: Conquest
 main: com.blockempires.conquest.ConquestPlugin
 version: 0.1
-depend: [WorldGuard, iConomy]
+depend: [WorldGuard, Vault]
 commands:
     conquest:
         description: Conquest commands
