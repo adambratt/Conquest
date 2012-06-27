@@ -7,7 +7,6 @@ import org.bukkit.plugin.Plugin;
 import ru.tehkode.permissions.bukkit.PermissionsEx;
 
 import com.blockempires.conquest.ConquestPlugin;
-import com.iConomy.iConomy;
 
 public class PluginHandler extends ServerListener {
 	private ConquestPlugin plugin;
@@ -23,10 +22,6 @@ public class PluginHandler extends ServerListener {
 			if(eventp instanceof PermissionsEx){
 				ConquestPlugin.permissions = (PermissionsEx) eventp;
 				ConquestPlugin.info("Pex loaded late");
-			}
-			if(eventp instanceof iConomy){ 
-				ConquestPlugin.iConomy = (iConomy) eventp;
-				ConquestPlugin.info("iConomy loaded late");
 			}
 		 } catch (NoClassDefFoundError ex) {
 			 return;

@@ -13,10 +13,8 @@ import org.bukkit.util.config.Configuration;
 
 import com.blockempires.conquest.objects.Area;
 import com.blockempires.conquest.objects.Race;
-import com.iConomy.iConomy;
-import com.iConomy.system.Account;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import lib.PatPeter.SQLibrary.*;
+import lib.PatPeter.SQLibrary.MySQL;
 
 public class Conquest implements Runnable {
 
@@ -60,8 +58,7 @@ public class Conquest implements Runnable {
 			for (Player p : a.getWorld().getPlayers()){
 				Race rp = Race.getRace(p);
 				if (rp != null && rp.getName() == r){
-					Account account = iConomy.getAccount(p.getName());
-					if(account!=null) account.getHoldings().add(money);
+					ConquestPlugin.getEconomy().depositPlayer(p.getName(), money);
 					p.sendMessage(ChatColor.GREEN+"[Conquest] Taxes on "+a.getName()+" netted "+ChatColor.AQUA+money+ChatColor.GREEN+" silver!");
 				}
 			}
@@ -112,32 +109,37 @@ public class Conquest implements Runnable {
 	}
 	
 	private void loadDatabase(){
-		if (db.getConnection() != null){
+		
+		
+		try {
+			this.db.setConnection(this.db.open());
+		} catch (Exception e) {
+ 			ConquestPlugin.error(e.getMessage());
+ 			plugin.getPluginLoader().disablePlugin(plugin);
+ 			return;
+		}
 			
-			// Check if tables are created, if not install/create them
-			installCheck();
-			Conquest.dbstatic = db;
-			
-			// Load Areas
-			ResultSet areaResult = db.query("select * from conquest_areas");
-			try {
-				while ( areaResult.next() ){
-					World world = plugin.getServer().getWorld(areaResult.getString("world"));
-					if (world == null)
-						continue;
-					ProtectedRegion region = getRegion(areaResult.getString("region"), world);
-					if (region == null)
-						continue;
-					Area a = new Area(areaResult.getInt("id"), region, world, Race.getRace(areaResult.getString("owner")), areaResult.getString("name"));
-					areaList.add(a);
-				}
-			} catch (SQLException e) {
-				ConquestPlugin.error("Disabling. SQL failed with: "+e.getMessage());
-				plugin.getServer().getPluginManager().disablePlugin(plugin);
-				return;
+		// Check if tables are created, if not install/create them
+		installCheck();
+		Conquest.dbstatic = db;
+		
+		// Load Areas
+		ResultSet areaResult = db.query("select * from conquest_areas");
+		try {
+			while ( areaResult.next() ){
+				World world = plugin.getServer().getWorld(areaResult.getString("world"));
+				if (world == null)
+					continue;
+				ProtectedRegion region = getRegion(areaResult.getString("region"), world);
+				if (region == null)
+					continue;
+				Area a = new Area(areaResult.getInt("id"), region, world, Race.getRace(areaResult.getString("owner")), areaResult.getString("name"));
+				areaList.add(a);
 			}
-		} else {
-			ConquestPlugin.error("Could not connect to database, check configuration. Conquest is crippled...");
+		} catch (SQLException e) {
+			ConquestPlugin.error("Disabling. SQL failed with: "+e.getMessage());
+			plugin.getServer().getPluginManager().disablePlugin(plugin);
+			return;
 		}
 	}
 	

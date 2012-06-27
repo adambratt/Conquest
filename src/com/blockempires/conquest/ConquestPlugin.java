@@ -2,6 +2,8 @@ package com.blockempires.conquest;
 
 import java.io.File;
 
+import net.milkbowl.vault.economy.Economy;
+
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
@@ -10,6 +12,7 @@ import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.server.ServerListener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import ru.tehkode.permissions.bukkit.PermissionsEx;
@@ -19,11 +22,10 @@ import com.blockempires.conquest.listeners.PlayerHandler;
 import com.blockempires.conquest.listeners.PluginHandler;
 import com.blockempires.conquest.system.CommandHandler;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.iConomy.iConomy;
 
 public class ConquestPlugin extends JavaPlugin{
 	private static WorldGuardPlugin wgPlugin;
-	public static iConomy iConomy;
+	public static Economy economy;
 	private File dir;
 	private Conquest conquest;
 	private PluginManager pManage;
@@ -75,12 +77,12 @@ public class ConquestPlugin extends JavaPlugin{
     		error("PermissionsEx Broke!");
     	}
     	// iConomy
-    	if (pManage.isPluginEnabled("iConomy")){
-			Plugin econ = pManage.getPlugin("iConomy");
-			if (econ instanceof iConomy)
-				iConomy = (iConomy) econ;
+    	if (pManage.getPlugin("Vault") != null){
+    		RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
+			if (rsp != null)
+				economy = rsp.getProvider();
 		} else {
-			error("iConomy does not appear to be installed and is REQUIRED by Conquest");
+			error("Vault does not appear to be installed and is REQUIRED by Conquest");
 		}
 	}
 
@@ -114,8 +116,8 @@ public class ConquestPlugin extends JavaPlugin{
 		return ConquestPlugin.permissions;
 	}
 	
-	public static iConomy getiConomy(){
-		return ConquestPlugin.iConomy;
+	public static Economy getEconomy(){
+		return ConquestPlugin.economy;
 	}
 
 }

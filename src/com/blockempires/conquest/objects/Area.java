@@ -16,8 +16,6 @@ import org.bukkit.entity.Player;
 import com.blockempires.conquest.Conquest;
 import com.blockempires.conquest.ConquestPlugin;
 import com.blockempires.conquest.listeners.AreaHandler;
-import com.iConomy.iConomy;
-import com.iConomy.system.Account;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Area {
@@ -169,7 +167,6 @@ public class Area {
 					newCount.put(playerRace, newCount.get(playerRace)+1);
 					x=playerRace.getName();
 				}
-				ConquestPlugin.error(name+" tracking "+p.getName()+" and race is "+x);
 			}
 		}
 		
@@ -272,8 +269,7 @@ public class Area {
 	
 	public void captureRewardRace(Race race, int money){
 		for (Player p : getRacePlayers(race)){
-			Account account = iConomy.getAccount(p.getName());
-			if(account!=null) account.getHoldings().add(money);
+			ConquestPlugin.getEconomy().depositPlayer(p.getName(), money);
 			p.sendMessage(ChatColor.GREEN+"[Conquest] You received "+ChatColor.AQUA+money+ChatColor.GREEN+" silver!");
 			p.sendMessage(ChatColor.GREEN+"[Conquest] If your race holds this location you will receive silver ever hour!");
 		}
