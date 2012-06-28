@@ -5,7 +5,7 @@ depend: [WorldGuard, Vault]
 commands:
     conquest:
         description: Conquest commands
-        usage: The commands are not for you to know
+        usage: /conquest
 
 permissions:
     conquest.edit:

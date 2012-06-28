@@ -5,11 +5,7 @@ import java.io.File;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Bukkit;
-import org.bukkit.event.Event;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.entity.EntityListener;
-import org.bukkit.event.player.PlayerListener;
-import org.bukkit.event.server.ServerListener;
+
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -95,11 +91,9 @@ public class ConquestPlugin extends JavaPlugin{
 	}
 
 	private void loadEvents() {
-		EntityListener entityListener = new EntityHandler(this.conquest);
-		PlayerListener playerListener = new PlayerHandler(this.conquest);
-		ServerListener pluginListener = new PluginHandler(this);
-		pManage.registerEvent(Event.Type.ENTITY_DEATH, entityListener, Priority.Monitor, this);
-		pManage.registerEvent(Event.Type.PLUGIN_ENABLE, pluginListener, Priority.Monitor, this);
+		getServer().getPluginManager().registerEvents(new EntityHandler(this.conquest), this);
+		getServer().getPluginManager().registerEvents(new PlayerHandler(this.conquest), this);
+		getServer().getPluginManager().registerEvents(new PluginHandler(this), this);
 	}
 	
 

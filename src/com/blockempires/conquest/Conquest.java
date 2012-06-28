@@ -8,8 +8,8 @@ import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.util.config.Configuration;
 
 import com.blockempires.conquest.objects.Area;
 import com.blockempires.conquest.objects.Race;
@@ -21,7 +21,7 @@ public class Conquest implements Runnable {
 	private ConquestPlugin plugin;
 	private HashSet<Area> areaList;
 	private int thread;
-	private Configuration config;
+	private FileConfiguration config;
 	private MySQL db;
 	private static MySQL dbstatic;
 	public static int defendMoney;
@@ -96,7 +96,7 @@ public class Conquest implements Runnable {
 	
 	
 	private void loadConfig(){
-		config = plugin.getConfiguration();
+		config = plugin.getConfig();
 		String hostname = config.getString("database.host","localhost");
 		String database = config.getString("database.database", "minecraft");
 		String username = config.getString("database.username", "root");
@@ -105,7 +105,7 @@ public class Conquest implements Runnable {
 		this.db = new MySQL(plugin.getServer().getLogger(), "[Conquest] ", hostname, port, database, username, password);
 		Conquest.captureMoney = config.getInt("iconomy.captureReward", 200);
 		Conquest.defendMoney = config.getInt("iconomy.defendReward", 50);
-		config.save();
+		//config.save();
 	}
 	
 	private void loadDatabase(){
